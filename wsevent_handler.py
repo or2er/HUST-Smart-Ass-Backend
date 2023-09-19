@@ -8,6 +8,9 @@ except ImportError:
 def logInfo(msg):
     print(f"[sid={request.sid}]: {msg}.")
 
+def updateProgress(taskName, data):
+    emit("get-prog", taskName, data)
+
 @sio.on("connect")
 def onConnect():
     emit("get-join", "connected")
@@ -16,3 +19,5 @@ def onConnect():
 @sio.on("disconnect")
 def onDisconnect():
     logInfo("disconnected")
+
+
