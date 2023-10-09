@@ -15,30 +15,39 @@ python server.py
 Default port is `8000`.
 
 ## API
-### Post PDF file
-- POST `/pdf/upload`
+### Making AI models
+- POST `/upload/pdf`
 - Request (form-data)
 ```
-{
     "file": <file>
-}
 ```
 - Output (JSON)
 ```
 {
-    "id": <base64 id>,
+    "id": <model_id>,
     "text": <pdf text>
 }
 ```
 
-### Ask PDF question
-- POST `/pdf/query`
-- Request (JSON)
+- POST `/upload/yt`
+- Request (form-data)
+```
+    "id": <youtube video id (e.g: 8j20gSdBPy4)>
+```
+- Output (JSON)
 ```
 {
-    "id": <base64 id>,
-    "query": <question>
+    "id": <model id>,
+    "text": <transcript text>
 }
+```
+
+### Ask AI model question
+- POST `/question`
+- Request (form-data)
+```
+    "id": <model-id>,
+    "query": <question>
 ```
 - Response (raw)
 ```

@@ -4,7 +4,9 @@ from flask_socketio import SocketIO
 from time import sleep
 from threading import Thread
 from queue import Queue, Empty
-from functions.pdf_processing import pdfUpload, PDFProcessing
+from functions.pdf_processing import pdfUpload
+from functions.yt_processing import ytUpload
+from functions.model_processing import ModelProcessing
 
 app = Flask(__name__)
 sio = SocketIO(app, cors_allowed_origins='*')
@@ -30,28 +32,36 @@ Thread(target=loop, daemon=True).start()
 def index():
     return "Hi THT i'm alive so pls give me Điểm rèn luyện or else i'll not function as intended pls"
 
-@app.post('/pdf/upload')
-def onPDFUpload():
-    data = pdfUpload(request)
+@app.post('/upload/<type>')
+def onUpload(type):
+    if type == "pdf":
+        data = pdfUpload(request)
+    elif type == "yt":
+        data = ytUpload(request)
     if data == None:
         return "An error occured"
-    pdf = PDFProcessing(data)
+
+    # # debugging..
+    # return {
+    #     "id": data["id"],
+    #     "text": data["text"]
+    # }
+    docu = ModelProcessing(data)
     def execute():
-        pdf.process()
+        docu.process()
     
     tasks.put(execute)
     return {
-        "id": pdf.id,
-        "text": pdf.text
+        "id": docu.id,
+        "text": docu.text
     }
 
-
-@app.post('/pdf/query')
-def onPDFQuery():
-    cnt = request.json
-    pdf = PDFProcessing({"id": cnt["id"], "text": ""})
-    pdf.process()
-    return pdf.query(cnt["query"])
+@app.post('/query')
+def onQuery():
+    cnt = request.form
+    docu = ModelProcessing({"id": cnt["id"]})
+    docu.process()
+    return docu.query(cnt["query"])
 
 if __name__ == '__main__':
     sio.run(app, port=8000, debug=True)

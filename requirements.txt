@@ -5,3 +5,4 @@ Flask-SocketIO
 pypdf==3.16.1
 tiktoken
 faiss-cpu
+youtube-transcript-api==0.6.1
