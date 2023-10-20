@@ -59,7 +59,7 @@ def onUpload(type):
 @app.post('/query')
 def onQuery():
     cnt = request.form
-    docu = ModelProcessing({"id": cnt["id"]})
+    docu = ModelProcessing({"id": cnt["id"], "text": ""})
     docu.process()
     return docu.query(cnt["query"])
 

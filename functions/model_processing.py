@@ -8,7 +8,7 @@ from .openai import tiktoken_len, embeddings_model, llm
 class ModelProcessing:
     def __init__(self, data):
         self.id = data["id"]
-        self.text = data["text"] | ""
+        self.text = data["text"]
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
