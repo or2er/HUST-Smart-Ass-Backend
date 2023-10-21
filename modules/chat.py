@@ -1,45 +1,70 @@
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.memory import ConversationSummaryMemory,ChatMessageHistory
-from langchain.chat_models import ChatOpenAI
+from langchain.utilities import WikipediaAPIWrapper
+from langchain.tools.python.tool import PythonREPLTool
+from langchain.agents import Tool, AgentType, tool
+from langchain.tools import DuckDuckGoSearchRun
+from langchain.agents import initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import MessagesPlaceholder
 
-from .knowledge_graph import save_context_to_graph
+from core.model import llm
+from modules.neo4j import graph_chain
 
-CHAT_TEMPLATE = """You are a personal AI assistant. Your name is THT
-Don't justify your answers.
-Don't preface your answer with "As an AI assistant...".
 
-Context:
-{context}
+wikipedia = WikipediaAPIWrapper()
+search = DuckDuckGoSearchRun()
+repl_tool = PythonREPLTool()
 
-History:
-{history}
+@tool("Memory")
+def personal_storage(message: str):
+    """
+    A memory tool that can store user typical information and retrieve it later.
+    Examples: "I love math", "Linda is a teacher", "My password is 1234"
+    """
+    
+    result = graph_chain(message)['result']
 
-Human: {prompt}
-AI:"""
+    if result is None or len(result) == 0:
+        return message
+    
+    return result
 
-CHAT_PROMPT = PromptTemplate.from_template(CHAT_TEMPLATE)
-
-llm = ChatOpenAI(temperature=0.8)
-
-chat_history = ChatMessageHistory()
-
-chat_memory = ConversationSummaryMemory(
-  llm=ChatOpenAI(temperature=0),
-  chat_memory=chat_history
+wikipedia_tool = Tool(
+    name='Wikipedia',
+    func= wikipedia.run,
+    description="useful when you need an answer about encyclopedic general knowledge"
 )
 
-chat_chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template("{prompt}"))
+duckduckgo_tool = Tool(
+    name='Search',
+    func= search.run,
+    description="useful for when you need to answer questions about current events. You should ask targeted questions"
+)
 
-def chat(user_input):
-    response = chat_chain(CHAT_PROMPT.format(prompt=user_input, history=chat_memory.buffer, context=""))
+tools = [repl_tool, wikipedia_tool, duckduckgo_tool, personal_storage]
 
-    output = response['text']
+memory = ConversationBufferMemory(memory_key="memory", return_messages=True)
 
-    chat_history.add_user_message(user_input)
-    chat_history.add_ai_message(output)
-    chat_memory.buffer = chat_memory.predict_new_summary(chat_history.messages, chat_memory.buffer)
+agent = initialize_agent(
+    agent=AgentType.OPENAI_FUNCTIONS,
+    tools=tools,
+    llm=llm,
+    verbose=True,
+    max_iterations=5,
+    memory=memory,
+    agent_kwargs = {
+        "extra_prompt_messages": [MessagesPlaceholder(variable_name="memory")],
+    }
+)
 
-    save_context_to_graph(user_input, output, chat_memory.buffer)
+def chat(message: str):
+    try:
+        return agent.run(message)
+    except Exception as e:
+        response = str(e)
 
-    return output
+        if not response.startswith("Could not parse LLM output: "):
+            raise e
+        
+        response = response.removeprefix("Could not parse LLM output: ").removesuffix("")
+
+        return response

@@ -15,6 +15,18 @@ python server.py
 Default port is `8000`.
 
 ## API
+
+### Interact with chatbot
+
+- import method `chat` from `modules/chat.py`
+
+- Usage
+```
+output: str = chat("Hello") # long time to execute
+```
+
+- Run file `demo.py` to run a demo in terminal
+
 ### Making AI models
 - POST `/upload/pdf`
 - Request (form-data)

@@ -3,7 +3,7 @@ import pickle
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from .openai import tiktoken_len, embeddings_model, llm
+from core.openai import tiktoken_len, embeddings_model, llm
 
 class ModelProcessing:
     def __init__(self, data):
