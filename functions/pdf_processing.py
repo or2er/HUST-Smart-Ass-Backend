@@ -35,5 +35,6 @@ def pdfUpload(request: flask.Request):
     return {
         "id": f"pdf_{file_hash.hexdigest()[:32]}",
         "text": text,
+        "type": "pdf"
     }
 

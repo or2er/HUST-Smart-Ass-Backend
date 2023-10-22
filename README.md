@@ -55,7 +55,7 @@ output: str = chat("Hello") # long time to execute
 ```
 
 ### Ask AI model question
-- POST `/question`
+- POST `/query`
 - Request (form-data)
 ```
     "id": <model-id>,

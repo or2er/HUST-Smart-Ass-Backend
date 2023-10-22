@@ -45,5 +45,6 @@ def ytUpload(request: flask.Request):
     return {
         "id": f"yt_{id}",
         "text": text,
+        "type": "yt"
     }
 
