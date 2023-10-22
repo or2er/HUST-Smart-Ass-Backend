@@ -25,7 +25,7 @@ def pdfUpload(request: flask.Request):
     # cleanup
     text = re.sub(' +', ' ', text)
     text = re.sub(r' \n+', '\n', text)
-    text = re.sub(r'\n', ' ', text)
+    text = re.sub(r'\n', ' \n ', text)
 
     # save the id as a blake2 hash (only take the first 32 char)
     file_hash = hashlib.blake2b()

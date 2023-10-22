@@ -15,7 +15,7 @@ def ytUpload(request: flask.Request):
         transcript_info = transcript_list.find_transcript(['en', 'vi', 'fr', 'de', 'ja'])
     except:
         return None
-    if transcript_info.language_code != "en":
+    if transcript_info.language_code != "en" or transcript_info.language_code != "vi":
         transcript_info = transcript_info.translate('en')
 
     transcript = transcript_info.fetch()
