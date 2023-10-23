@@ -1,3 +1,4 @@
+import json
 import os
 import pickle
 from flask import Flask, request
@@ -14,13 +15,17 @@ from threading import Thread
 from queue import Queue, Empty
 from functions.pdf_processing import pdfUpload
 from functions.yt_processing import ytUpload
-from functions.model_processing import ModelProcessing
 
+from functions.document import DocumentModel
+from functions.task import Task
+from functions.note import Note
 from modules.chat import chat
 
 tasks = Queue()
-docu_cache = {}
-msg_cache = {}
+docu_cache: dict[str, DocumentModel] = {}
+msg_cache: dict[str, list()] = {}
+task_cache = []
+note_cache = []
 
 def loop():
     while True:
@@ -35,12 +40,127 @@ def loop():
 
 Thread(target=loop, daemon=True).start()
 
-def load_docu(id):
+def logInfo(msg):
+    print(f"[sid={request.sid}]: {msg}.")
+
+@app.route('/')
+def index():
+    return "Hi THT i'm alive so pls give me Điểm rèn luyện or else i'll not function as intended pls"
+
+@app.post('/upload/<type>')
+def onUpload(type):
+    if type == "pdf":
+        data = pdfUpload(request)
+    elif type == "yt":
+        data = ytUpload(request)
+    if data == None:
+        return "An error occured"
+
     global docu_cache
+    docu_cache[data["id"]] = DocumentModel(data)
+    def execute():
+        docu_cache[data["id"]].process()
+    
+    tasks.put(execute)
+    return {
+        "id": data["id"],
+        "text": data["text"]
+    }
+
+
+
+# ================
+def load_task():
+    global task_cache
+    if task_cache == []:
+        if os.path.exists(f"data/task.pkl"):
+            with open(f"data/task.pkl", 'rb') as fr:
+                try:
+                    while True:
+                       task_cache.append(pickle.load(fr))
+                except EOFError:
+                    pass
+        else:
+            # dirty hax
+            with open(f"data/task.pkl", 'wb') as fp:
+                pickle.dump(Task(), fp)
+
+@app.post('/task/create')
+def task_create():
+    task = Task(request.form)
+    global task_cache
+    load_task()
+    task_cache.append(task)
+    with open(f"data/task.pkl", 'ab') as fp:
+        pickle.dump(task, fp)
+    return {
+        "msg": "ok"
+    }
+
+@app.post('/task/read')
+def task_read():
+    load_task()
+    return {
+        "msg": "ok",
+        "data": json.loads(json.dumps(task_cache, default=vars))
+    }
+
+
+
+# ================
+def load_note():
+    global note_cache
+    if note_cache == []:
+        if os.path.exists(f"data/note.pkl"):
+            with open(f"data/note.pkl", 'rb') as fr:
+                try:
+                    while True:
+                       note_cache.append(pickle.load(fr))
+                except EOFError:
+                    pass
+        else:
+            # dirty hax
+            with open(f"data/note.pkl", 'wb') as fp:
+                pickle.dump(Note(), fp)
+
+@app.post('/note/create')
+def note_create():
+    note = Note(request.form)
+    global note_cache
+    load_note()
+    note_cache.append(note)
+    print(note.details)
+    with open(f"data/note.pkl", 'ab') as fp:
+        pickle.dump(note, fp)
+    return {
+        "msg": "ok"
+    }
+
+@app.post('/note/read')
+def note_read():
+    load_note()
+    return {
+        "msg": "ok",
+        "data": json.loads(json.dumps(note_cache, default=vars))
+    }
+
+
+
+# ================
+def load_docu(id):
+    global docu_cache   
     if docu_cache.get(id) == None:
-        docu_cache[id] = ModelProcessing({"id": id, "type": "query"})
+        docu_cache[id] = DocumentModel({"id": id, "type": "query"})
         docu_cache[id].process()
 
+@sio.on("post-prog")
+def check_progress(task_id):
+    load_docu(task_id)
+    emit("get-prog", (task_id, docu_cache[task_id].processing_status))
+
+
+
+# ================
 def load_msg(id):
     global msg_cache
     if msg_cache.get(id) == None:
@@ -61,40 +181,8 @@ def append_msg(id, sender, msg):
     global msg_cache
     load_msg(id)
     msg_cache[id].append([sender, msg])
-    with open(f"data/chat_{id}.pkl", 'wb') as fp:
+    with open(f"data/chat_{id}.pkl", 'ab') as fp:
         pickle.dump([sender, msg], fp)
-
-def logInfo(msg):
-    print(f"[sid={request.sid}]: {msg}.")
-
-@app.route('/')
-def index():
-    return "Hi THT i'm alive so pls give me Điểm rèn luyện or else i'll not function as intended pls"
-
-@app.post('/upload/<type>')
-def onUpload(type):
-    if type == "pdf":
-        data = pdfUpload(request)
-    elif type == "yt":
-        data = ytUpload(request)
-    if data == None:
-        return "An error occured"
-
-    global docu_cache
-    docu_cache[data["id"]] = ModelProcessing(data)
-    def execute():
-        docu_cache[data["id"]].process()
-    
-    tasks.put(execute)
-    return {
-        "id": data["id"],
-        "text": data["text"]
-    }
-
-@sio.on("post-prog")
-def check_progress(task_id):
-    load_docu(task_id)
-    emit("get-prog", (task_id, docu_cache[task_id].processing_status))
 
 @sio.on("post-past-msg")
 def on_load_past_msg(id, num):
@@ -114,6 +202,9 @@ def on_msg_received(id: str, msg: str):
     append_msg(id, 0, res)
     emit("get-msg", (id, 0, res))
 
+
+
+# ================
 @sio.on("connect")
 def onConnect():
     emit("get-join", "connected")

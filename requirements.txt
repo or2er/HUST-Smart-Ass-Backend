@@ -11,3 +11,4 @@ neo4j
 wikipedia
 python-dotenv
 google-cloud-aiplatform
+duckduckgo-search

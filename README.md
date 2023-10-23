@@ -8,6 +8,8 @@
 pip install -r requirements.txt
 ```
 
+### Setup `.env` file, `credentials.json` file
+
 ### Run server
 ```
 python server.py
@@ -27,30 +29,105 @@ output: str = chat("Hello") # long time to execute
 
 - Run file `demo.py` to run a demo in terminal
 
-### Making models based on documents
-#### POST `/upload/pdf`
-- Request (form-data)
+### Documents
+#### Make PDF models
+- Request (form-data, POST `/upload/pdf`)
 ```
-    "file": <file>
+    "file": <file>          # PDF file
 ```
-- Output (JSON)
+- Response (JSON)
 ```
 {
-    "id": <model_id>,
-    "text": <pdf text>
+    "id": <model_id>,       # Document ID
+    "text": <pdf text>      # Scanned text 
 }
 ```
 
-#### POST `/upload/yt`
-- Request (form-data)
+#### Make YouTube transcript models
+- Request (form-data, POST `/upload/yt`)
 ```
-    "id": <youtube video id (e.g: 8j20gSdBPy4)>
+    "id": <youtube id>      # YouTube video ID (e.g: 8j20gSdBPy4)
 ```
-- Output (JSON)
+- Response (JSON)
 ```
 {
-    "id": <model id>,
-    "text": <transcript text>
+    "id": <model_id>,       # Document ID
+    "text": <yt text>       # YouTube's transcript text
+}
+```
+
+### Task/Note
+#### Create Task
+- Request (form-data, POST `/task/create`)
+```
+    "name": <name>          # Task's name
+    "details": <details>    # Task's details
+    "type": <type>          # Task's type (daily, one-time, ...)
+    "time": <time>          # Task's time (seconds [0-86399], or UNIX time)
+    "priority": <priority>  # Task's priority
+```
+- Response (JSON)
+```
+{
+    "msg": <status>         # "ok"
+}
+```
+#### Read Tasks
+- Request (form-data, POST `/task/read`)
+```
+    <empty>
+```
+- Response (JSON)
+```
+{
+    "msg": <status>,        # "ok"
+    "data": [
+        {
+            "name": <name>          # Task's name
+            "details": <details>    # Task's details
+            "type": <type>          # Task's type (daily, one-time, ...)
+            "time": <time>          # Task's time (seconds [0-86399], or UNIX time)
+            "priority": <priority>  # Task's priority
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
+#### Create Note
+- Request (form-data, POST `/note/create`)
+```
+    "name": <name>          # Note's name
+    "details": <details>    # Note's details
+    "priority": <priority>  # Note's priority
+```
+- Response (JSON)
+```
+{
+    "msg": <status>         # "ok"
+}
+```
+#### Read Notes
+- Request (form-data, POST `/note/read`)
+```
+    <empty>
+```
+- Response (JSON)
+```
+{
+    "msg": <status>,        # "ok"
+    "data": [
+        {
+            "name": <name>          # Note's name
+            "details": <details>    # Note's details
+            "priority": <priority>  # Note's priority
+        },
+        {
+            ...
+        }
+    ]
 }
 ```
 

@@ -1,12 +1,11 @@
 import os
-import pickle
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from core.model import tiktoken_len, embeddings, llm
-from wsevent import update_progress
 
-class ModelProcessing:
+
+class DocumentModel:
     def print_debug(self, msg):
         print(f"[id={self.id}] {msg}.")
 
@@ -58,6 +57,7 @@ class ModelProcessing:
                     
                     self.processing_status = (i+1)/len(chunk)
                     self.print_debug(f"Processed {i+1}/{len(chunks)}, percentage: {format((i+1)/len(chunks)*100, '.2f')}%")
+                    from wsevent import update_progress
                     update_progress(self.id, (i+1)/len(chunk))
                 
                 self.status = None
