@@ -1,6 +1,10 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import json
 import os
 import pickle
+
 from flask import Flask, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
