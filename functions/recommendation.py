@@ -53,17 +53,13 @@ class Person:
         bmi_string = f'{bmi} kg/m²'
         if bmi < 18.5:
             category = 'Underweight'
-            color = 'Red'
         elif 18.5 <= bmi < 25:
             category = 'Normal'
-            color = 'Green'
         elif 25 <= bmi < 30:
             category = 'Overweight'
-            color = 'Yellow'
         else:
             category = 'Obesity'
-            color = 'Red'
-        return bmi_string, category, color
+        return category
 
     def calculate_bmr(self):
         if self.gender == 'Male':

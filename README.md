@@ -198,7 +198,8 @@ output: str = chat("Hello") # long time to execute
 - Response (JSON)
 ```
 {
-    "output": {
+    "bmi": 99,
+    "diet": {
         "breakfast": [
             {
                 "Calories": 474.1,
@@ -229,7 +230,8 @@ output: str = chat("Hello") # long time to execute
             ...
         ],
         ...
-    }
+    },
+    "status": "Obesity"
 }
 ```
 ### Other event
