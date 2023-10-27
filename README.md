@@ -199,6 +199,24 @@ output: str = chat("Hello") # long time to execute
 ```
 {
     "bmi": 99,
+    "calories_calculator": {
+        "Extreme weight loss": {
+            "calories_per_week": 1156,
+            "loss_per_week": "1 kg"
+        },
+        "Maintain weight": {
+            "calories_per_week": 1926,
+            "loss_per_week": "0 kg"
+        },
+        "Mild weight loss": {
+            "calories_per_week": 1733,
+            "loss_per_week": "0.25 kg"
+        },
+        "Weight loss": {
+            "calories_per_week": 1541,
+            "loss_per_week": "0.5 kg"
+        }
+    },
     "diet": {
         "breakfast": [
             {
