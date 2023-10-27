@@ -5,6 +5,11 @@ from flask import Flask, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
+from pydantic import BaseModel,conlist
+from typing import List,Optional
+import pandas as pd
+from core.recommend_model import recommend,output_recommended_recipes
+
 app = Flask(__name__)
 CORS(app)
 
@@ -144,6 +149,68 @@ def note_read():
         "data": json.loads(json.dumps(note_cache, default=vars))
     }
 
+
+
+dataset=pd.read_csv('Data/dataset.csv',compression='gzip')
+class params(BaseModel):
+    n_neighbors:int=5
+    return_distance:bool=False
+
+class PredictionIn(BaseModel):
+    nutrition_input:conlist(float, min_length=9, max_length=9)
+    ingredients:list[str]=[]
+    params:Optional[params]
+
+
+class Recipe(BaseModel):
+    Name:str
+    CookTime:str
+    PrepTime:str
+    TotalTime:str
+    RecipeIngredientParts:list[str]
+    Calories:float
+    FatContent:float
+    SaturatedFatContent:float
+    CholesterolContent:float
+    SodiumContent:float
+    CarbohydrateContent:float
+    FiberContent:float
+    SugarContent:float
+    ProteinContent:float
+    RecipeInstructions:list[str]
+
+class PredictionOut(BaseModel):
+    output: Optional[List[Recipe]] = None
+
+from functions.recommendation import Generator,Person
+
+@app.post("/predict")
+def update_item():
+    prediction_input = request.json
+    print(prediction_input)
+    recommendation_dataframe=recommend(dataset,prediction_input["nutrition_input"])
+    output=output_recommended_recipes(recommendation_dataframe)
+    if output is None:
+        return {"output":None}
+    else:
+        return {"output":output}
+
+@app.post('/recommend')
+def get_recommend():
+    input_form = request.form
+    meals_calories_perc = {'breakfast': 0.35, 'lunch': 0.40, 'dinner': 0.25}
+    person = Person(age=float(input_form['age']),
+                    height=float(input_form['height']),
+                    weight=float(input_form['weight']),
+                    gender=input_form['gender'],
+                    activity=input_form['activity'],
+                    meals_calories_perc=meals_calories_perc,
+                    weight_loss=int(input_form['weight_loss']))
+    output = person.generate_recommendations()
+    if output is None:
+        return {"output":None}
+    else:
+        return {"output":output}
 
 
 # ================
