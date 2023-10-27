@@ -13,6 +13,8 @@ from pydantic import BaseModel,conlist
 from typing import List,Optional
 import pandas as pd
 from core.recommend_model import recommend,output_recommended_recipes
+from functions.recommendation import Person
+
 
 app = Flask(__name__)
 CORS(app)
@@ -191,30 +193,23 @@ class Recipe(BaseModel):
 class PredictionOut(BaseModel):
     output: Optional[List[Recipe]] = None
 
-from functions.recommendation import Generator,Person
 
-@app.post("/predict")
-def update_item():
-    prediction_input = request.json
-    print(prediction_input)
-    recommendation_dataframe=recommend(dataset,prediction_input["nutrition_input"])
-    output=output_recommended_recipes(recommendation_dataframe)
-    if output is None:
-        return {"output":None}
-    else:
-        return {"output":output}
 
 @app.post('/recommend')
 def get_recommend():
     input_form = request.form
     meals_calories_perc = {'breakfast': 0.35, 'lunch': 0.40, 'dinner': 0.25}
+    plans = ["Maintain weight", "Mild weight loss", "Weight loss", "Extreme weight loss"]
+    loss = [1,0.9,0.8,0.6]
+    weight_plan = input_form['weight_plan']
+    weight_loss = loss[plans.index(weight_plan)]
     person = Person(age=float(input_form['age']),
                     height=float(input_form['height']),
                     weight=float(input_form['weight']),
                     gender=input_form['gender'],
                     activity=input_form['activity'],
                     meals_calories_perc=meals_calories_perc,
-                    weight_loss=int(input_form['weight_loss']))
+                    weight_loss=weight_loss)
     output = person.generate_recommendations()
     if output is None:
         return {"output":None}

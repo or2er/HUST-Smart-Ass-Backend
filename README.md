@@ -184,7 +184,54 @@ output: str = chat("Hello") # long time to execute
 <id>                # <document_id>: Document related
 <completion_rate>   # Represented as a float in range [0,1].
 ```
-
+### Diet Recommendation
+#### Get recommendation
+- Request (form-data, POST `/recommend`)
+```
+<age>               # User's age
+<height>            # User's age, in cm
+<weight>            # User's weight, in kg
+<gender>            # Male or Female
+<activity>          # set of values = ['Little/no exercise', 'Light exercise', 'Moderate exercise (3-5 days/wk)','Very active (6-7 days/wk)', 'Extra active (very active & physical job)']
+<weight_plan>       # set of values = ['Maintain weight', 'Mild weight loss', 'Weight loss', 'Extreme weight loss']
+```
+- Response (JSON)
+```
+{
+    "output": {
+        "breakfast": [
+            {
+                "Calories": 474.1,
+                "CarbohydrateContent": 50.0,
+                "CholesterolContent": 34.2,
+                "CookTime": 10,
+                "FatContent": 19.3,
+                "FiberContent": 4.2,
+                "Name": "Chicken Cashew Pasta",
+                "PrepTime": 15,
+                "ProteinContent": 26.5,
+                "RecipeId": 101528,
+                "RecipeIngredientParts": [
+                    "pasta",
+                    "garlic",
+                    ...
+                ],
+                "RecipeInstructions": [
+                    "Cook pasta according to package directions.",
+                    "Slice chicken into bite-sized pieces.",
+                    ...
+                ],
+                "SaturatedFatContent": 2.8,
+                "SodiumContent": 223.0,
+                "SugarContent": 2.0,
+                "TotalTime": 25
+            },
+            ...
+        ],
+        ...
+    }
+}
+```
 ### Other event
 - Server event (Event name: `get-join`)
     + Notify if you have successfully connect to the server.
