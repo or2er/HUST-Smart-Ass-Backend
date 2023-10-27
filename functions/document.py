@@ -2,7 +2,7 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from core.model import tiktoken_len, embeddings, llm
+from core.model import tiktoken_len, embeddings, llm0
 
 
 class DocumentModel:
@@ -14,11 +14,11 @@ class DocumentModel:
         self.text = data.get("text") or ""
         self.type = data.get("type") or "query"
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1200,
-            chunk_overlap=300,
+            chunk_size=1000,
+            chunk_overlap=200,
             length_function=tiktoken_len
         )
-        self.chain = load_qa_chain(llm=llm, chain_type="stuff")
+        self.chain = load_qa_chain(llm=llm0, chain_type="stuff")
         self.status = None
         self.processing_status = 0
         self.print_debug("New model created")
@@ -50,20 +50,11 @@ class DocumentModel:
 
                 chunks = self.text_splitter.split_text(text=self.text)
                 self.print_debug(f"Num of chunks: {len(chunks)}")
-
-                for i, chunk in enumerate(chunks):
-                    temp_db = FAISS.from_texts(chunk, embeddings)
-                    self.faiss_db.merge_from(temp_db)
-                    
-                    self.processing_status = (i+1)/len(chunk)
-                    self.print_debug(f"Processed {i+1}/{len(chunks)}, percentage: {format((i+1)/len(chunks)*100, '.2f')}%")
-                    from wsevent import update_progress
-                    update_progress(self.id, (i+1)/len(chunk))
-                
+                self.faiss_db = FAISS.from_texts(chunks, embeddings)
                 self.status = None
                 self.processing_status = 1
                 self.faiss_db.save_local(f"data/vs_{self.id}")
-                self.print_debug("Saved DB.")
+                self.print_debug("Saved DB")
 
     def query(self, text):
         if self.status == None and self.processing_status == 1:
