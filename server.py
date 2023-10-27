@@ -181,9 +181,9 @@ def get_recommend():
     input_form = request.form
     meals_calories_perc = {'breakfast': 0.35, 'lunch': 0.40, 'dinner': 0.25}
     plans = ["Maintain weight", "Mild weight loss", "Weight loss", "Extreme weight loss"]
-    loss = [1, 0.9, 0.8, 0.6]
+    losses = [1, 0.9, 0.8, 0.6]
     weight_plan = input_form['weight_plan']
-    weight_loss = loss[plans.index(weight_plan)]
+    weight_loss = losses[plans.index(weight_plan)]
     person = Person(age=float(input_form['age']),
                     height=float(input_form['height']),
                     weight=float(input_form['weight']),
@@ -192,6 +192,14 @@ def get_recommend():
                     meals_calories_perc=meals_calories_perc,
                     weight_loss=weight_loss)
     output = person.generate_recommendations()
+    calculator = {}
+    maintain_calories = person.calories_calculator()
+    loss_per_week = ['0 kg', '0.25 kg', '0.5 kg', '1 kg']
+    for plan,loss,lpw in zip(plans,losses, loss_per_week):
+        calculator[plan] = {
+            'calories_per_week': round(maintain_calories * loss),
+            'loss_per_week': lpw
+        }
     if output is None:
         return {"output": None}
     else:
@@ -199,6 +207,7 @@ def get_recommend():
             "bmi": person.calculate_bmi(),
             "status": person.display_result(),
             "diet": output,
+            "calories_calculator": calculator
         }
 
 
