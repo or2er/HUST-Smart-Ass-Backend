@@ -6,7 +6,8 @@ from core.model import llm, llm0
 
 CYPHER_GENERATION_TEMPLATE = """Task: Generate Cypher statement to modify and query a graph database.
 Instructions:
-User name is "Ninh".
+User name is "Minh".
+He studies Cyber Security at Hanoi University of Science and Technology (HUST).
 Use the provided relationship types and properties in the schema.
 You can use new relationships and properties if needed.
 Only use MERGE query or modify the graph.

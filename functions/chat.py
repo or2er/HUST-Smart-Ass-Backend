@@ -1,14 +1,17 @@
 from langchain.utilities import WikipediaAPIWrapper
 from langchain.tools.python.tool import PythonREPLTool
 from langchain.agents import Tool, AgentType, tool
-from langchain.tools import DuckDuckGoSearchRun
+from langchain.tools import DuckDuckGoSearchRun, BaseTool
 from langchain.agents import initialize_agent
 from langchain.memory import ConversationBufferMemory
-from langchain.prompts import MessagesPlaceholder
+from langchain.chains import LLMChain
+from langchain.prompts import MessagesPlaceholder, StringPromptTemplate
+from pydantic import BaseModel, Field
 
 from core.model import llm
 from functions.neo4j import graph_chain
 from datetime import datetime
+from typing import Type, Optional, List
 
 
 wikipedia = WikipediaAPIWrapper()
@@ -29,22 +32,20 @@ def personal_storage(message: str):
     
     return result
 
-@tool("Summarizer")
-def summarizer(topic: str, deadline: datetime):
-    """
-    Summarizes a topic in the background and returns the result at the deadline.
-    deadline must be in the format of "YYYY-MM-DD HH:MM:SS", you can use python to get current time.
-    """
-    # TODO: add a summarizer to the background queue
+class SummarzerInput(BaseModel):
+    topic: str = Field(description="The name of the topic to summarize")
+    time: Optional[datetime] = Field(default=None, description="Time to finish the task, if not mentioned, return None, time format: YYYY-MM-DD HH:MM:SS")
 
-    return "Summarizing topic about " + topic + " is added to the background queue. You will be notified when it is done."
+class SummarizerTool(BaseTool):
+    name = 'Summarizer'
+    description = 'Add a summarizer to the background queue to summarize a topic. Use "Clock" to get the current time'
+    args_schema: Type[SummarzerInput] = SummarzerInput
 
-@tool("Clock")
-def clock():
-    """
-    Returns the current time with the format of "YYYY-MM-DD HH:MM:SS"
-    """
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def _run(self, topic: str, time: Optional[datetime] = None):
+        # TODO: add a summarizer to the background queue
+        print(topic, time)
+
+        return "Summarizer added to the background queue, you will be notified when it's done"
 
 wikipedia_tool = Tool(
     name='Wikipedia',
@@ -58,7 +59,7 @@ duckduckgo_tool = Tool(
     description="useful for when you need to answer questions about current events. You should ask targeted questions"
 )
 
-tools = [repl_tool, wikipedia_tool, duckduckgo_tool, personal_storage, summarizer, clock]
+tools = [repl_tool, wikipedia_tool, duckduckgo_tool, personal_storage, SummarizerTool()]
 
 memory = ConversationBufferMemory(memory_key="memory", return_messages=True)
 
@@ -76,6 +77,7 @@ agent = initialize_agent(
 
 def chat(message: str):
     try:
+        message += " (current time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")"
         return agent.run(message)
     except Exception as e:
         response = str(e)
