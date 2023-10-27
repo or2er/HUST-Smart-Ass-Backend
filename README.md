@@ -149,14 +149,26 @@ output: str = chat("Hello") # long time to execute
 ```
 
 #### Load previous messages
-- Client event (Event name: `post-past-msg`)
-    + Request previous messages send in `id`.
-    + This event will respond with `num` response `get-msg`.
+- Request (form-data, POST `/note/read`)
 ```
-<id>                # "chat": Chatbot related, <document_id>: Document related
-<num>               # number of messages need to fetch
+    <id>                # "chat": Chatbot related, <document_id>: Document related
+    <num>               # number of messages need to fetch
 ```
-
+- Response (JSON)
+```
+{
+    "msg": <status>,        # "ok"
+    "data": [
+        [
+            <sender>        # 0: AI | 1: User
+            <message>       # Message content
+        ],
+        [
+            ...
+        ]
+    ]
+}
+```
 ### Progress tracking
 - Client event (Event name: `post-prog`)
     + Request completion rate of a document.

@@ -189,12 +189,15 @@ def append_msg(id, sender, msg):
     with open(f"data/chat_{id}.pkl", 'ab') as fp:
         pickle.dump([sender, msg], fp)
 
-@sio.on("post-past-msg")
-def on_load_past_msg(id, num):
+@app.post('/msg/read')
+def on_load_past_msg():
+    req = request.form
+    id = req.get("id")
     load_msg(id)
-    logInfo(f"Load past messages: {len(msg_cache[id])}")
-    for msg in msg_cache[id][-int(num):]:
-        emit("get-msg", (id, msg[0], msg[1]))
+    return {
+        "msg": "ok",
+        "data": json.loads(json.dumps(msg_cache[id][-int(req.get("num")):], default=vars))
+    }
 
 @sio.on("post-msg")
 def on_msg_received(id: str, msg: str):
