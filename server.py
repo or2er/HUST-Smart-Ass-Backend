@@ -28,7 +28,7 @@ from functions.yt_processing import ytUpload
 from functions.document import DocumentModel
 from functions.task import Task
 from functions.note import Note
-from modules.chat import chat
+from functions.chat import chat
 
 tasks = Queue()
 docu_cache: dict[str, DocumentModel] = {}
