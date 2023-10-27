@@ -1,11 +1,13 @@
 import os
 from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import VertexAIEmbeddings
+from langchain.embeddings import HuggingFaceHubEmbeddings
+
 import tiktoken
 from dotenv import load_dotenv
 load_dotenv()
 
 tokenize = tiktoken.get_encoding('cl100k_base')
+embeddings = HuggingFaceHubEmbeddings()
 
 def create_llm(model, temperature):
     llm = ChatOpenAI(
@@ -26,6 +28,3 @@ def tiktoken_len(text):
 llm = create_llm('gpt-3.5-turbo', 0.8)
 llm0 = create_llm('gpt-3.5-turbo', 0)
 # llm0 = create_llm('gpt-4', 0)
-
-embeddings = VertexAIEmbeddings()
-

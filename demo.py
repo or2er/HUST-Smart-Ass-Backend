@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from modules.chat import chat
+from functions.chat import chat
 
 while True:
     message = input("You: ")

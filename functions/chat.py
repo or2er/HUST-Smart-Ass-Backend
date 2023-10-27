@@ -7,7 +7,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 
 from core.model import llm
-from modules.neo4j import graph_chain
+from functions.neo4j import graph_chain
+from datetime import datetime
 
 
 wikipedia = WikipediaAPIWrapper()
@@ -28,6 +29,23 @@ def personal_storage(message: str):
     
     return result
 
+@tool("Summarizer")
+def summarizer(topic: str, deadline: datetime):
+    """
+    Summarizes a topic in the background and returns the result at the deadline.
+    deadline must be in the format of "YYYY-MM-DD HH:MM:SS", you can use python to get current time.
+    """
+    # TODO: add a summarizer to the background queue
+
+    return "Summarizing topic about " + topic + " is added to the background queue. You will be notified when it is done."
+
+@tool("Clock")
+def clock():
+    """
+    Returns the current time with the format of "YYYY-MM-DD HH:MM:SS"
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 wikipedia_tool = Tool(
     name='Wikipedia',
     func= wikipedia.run,
@@ -40,7 +58,7 @@ duckduckgo_tool = Tool(
     description="useful for when you need to answer questions about current events. You should ask targeted questions"
 )
 
-tools = [repl_tool, wikipedia_tool, duckduckgo_tool, personal_storage]
+tools = [repl_tool, wikipedia_tool, duckduckgo_tool, personal_storage, summarizer, clock]
 
 memory = ConversationBufferMemory(memory_key="memory", return_messages=True)
 
