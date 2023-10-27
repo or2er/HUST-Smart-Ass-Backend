@@ -162,7 +162,7 @@ def note_read():
 
 
 
-dataset=pd.read_csv('Data/dataset.csv',compression='gzip')
+dataset=pd.read_csv('dataset/dataset.csv',compression='gzip')
 class params(BaseModel):
     n_neighbors:int=5
     return_distance:bool=False
