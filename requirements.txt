@@ -11,7 +11,6 @@ langchain-experimental
 neo4j
 wikipedia
 python-dotenv~=0.21.0
-google-cloud-aiplatform
 duckduckgo-search
 pandas==1.5.1
 numpy==1.24.1

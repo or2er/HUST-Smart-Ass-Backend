@@ -27,4 +27,4 @@ def tiktoken_len(text):
 
 llm = create_llm('gpt-3.5-turbo', 0.8)
 llm0 = create_llm('gpt-3.5-turbo', 0)
-# llm0 = create_llm('gpt-4', 0)
+llm4 = create_llm('gpt-4', temperature=0.8)
