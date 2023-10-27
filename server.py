@@ -27,6 +27,11 @@ msg_cache: dict[str, list()] = {}
 task_cache = []
 note_cache = []
 
+try:
+    os.mkdir("data")
+except FileExistsError:
+    pass
+
 def loop():
     while True:
         try:
@@ -187,12 +192,13 @@ def append_msg(id, sender, msg):
 @sio.on("post-past-msg")
 def on_load_past_msg(id, num):
     load_msg(id)
-    print(len(msg_cache[id]))
+    logInfo(f"Load past messages: {len(msg_cache[id])}")
     for msg in msg_cache[id][-int(num):]:
         emit("get-msg", (id, msg[0], msg[1]))
 
 @sio.on("post-msg")
 def on_msg_received(id: str, msg: str):
+    logInfo(f"Received msg: {id}: {msg}")
     append_msg(id, 1, msg)
     if id == "chat":
         res = chat(msg)
@@ -200,6 +206,7 @@ def on_msg_received(id: str, msg: str):
         load_docu(id)
         res = docu_cache[id].query(msg)
     append_msg(id, 0, res)
+    logInfo(f"Sent response: {id}: {res}")
     emit("get-msg", (id, 0, res))
 
 
@@ -215,5 +222,5 @@ def onDisconnect():
     logInfo("disconnected")
 
 if __name__ == '__main__':
-    sio.run(app, port=8000, debug=True)
+    sio.run(app, host="0.0.0.0", port=8000, debug=True)
 
