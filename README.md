@@ -149,7 +149,7 @@ output: str = chat("Hello") # long time to execute
 ```
 
 #### Load previous messages
-- Request (form-data, POST `/note/read`)
+- Request (form-data, POST `/msg/read`)
 ```
     <id>                # "chat": Chatbot related, <document_id>: Document related
     <num>               # number of messages need to fetch
@@ -169,6 +169,7 @@ output: str = chat("Hello") # long time to execute
     ]
 }
 ```
+
 ### Progress tracking
 - Client event (Event name: `post-prog`)
     + Request completion rate of a document.

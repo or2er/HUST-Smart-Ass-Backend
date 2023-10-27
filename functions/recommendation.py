@@ -4,7 +4,7 @@ import pandas as pd
 from random import uniform as rnd
 from core.recommend_model import recommend, output_recommended_recipes
 
-dataset = pd.read_csv('Data/dataset.csv', compression='gzip')
+dataset = pd.read_csv('dataset/dataset.csv', compression='gzip')
 
 
 class Generator:
