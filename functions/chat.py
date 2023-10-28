@@ -1,15 +1,22 @@
 from langchain.utilities import WikipediaAPIWrapper
 from langchain.tools.python.tool import PythonREPLTool
-from langchain.agents import Tool, AgentType, tool
+from langchain.agents import (
+    Tool,
+    tool,
+    AgentExecutor,
+)
+from langchain.schema import AIMessage, HumanMessage
 from langchain.tools import DuckDuckGoSearchRun, BaseTool
-from langchain.agents import initialize_agent
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import LLMChain
-from langchain.prompts import MessagesPlaceholder, ChatPromptTemplate
-from langchain.tools.render import format_tool_to_openai_function
+from langchain.prompts import (
+    MessagesPlaceholder,
+    ChatPromptTemplate,
+)
+from langchain.tools.render import (
+    format_tool_to_openai_function,
+)
 from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.agents import AgentExecutor
 from pydantic import BaseModel, Field
 
 from .article_generator import ArticleGenerator
@@ -18,25 +25,33 @@ from .recommendation import Person
 from core.model import llm0
 from functions.neo4j import graph_chain
 from datetime import datetime
-from typing import Type, Optional, List
+from typing import Type
+
 
 wikipedia = WikipediaAPIWrapper()
 search = DuckDuckGoSearchRun()
 repl_tool = PythonREPLTool()
 
-@tool("Memory")
-def personal_storage(message: str):
-    """
-    A memory tool that can store user typical information and retrieve it later.
-    Examples: "I love math", "Linda is a teacher", "My password is 1234"
-    """
-    
-    result = graph_chain(message)['result']
+class MemoryInput(BaseModel):
+    information: str = Field(description="The information to store")
 
-    if result is None or len(result) == 0:
-        return message
-    
-    return result
+class MemoryTool(BaseTool):
+    name = 'Memory'
+    description = 'A memory tool that can store user personal information, useful for when you need to remember something'
+    args_schema: Type[MemoryInput] = MemoryInput
+
+    def _run(self, message: str):
+        """
+        A memory tool that can store user personal information.
+        Examples: "I love math", "Linda is a teacher", "My password is 1234"
+        """
+
+        result = graph_chain(message)['result']
+
+        if result is None or len(result) == 0:
+            return message
+        
+        return result
 
 @tool
 def diet_recommendation():
@@ -110,7 +125,7 @@ duckduckgo_tool = Tool(
     description="useful for when you need to answer questions about current events. You should ask targeted questions"
 )
 
-tools = [repl_tool, wikipedia_tool, duckduckgo_tool, BrowserTool(), diet_recommendation]
+tools = [repl_tool, wikipedia_tool, duckduckgo_tool, BrowserTool(), diet_recommendation, MemoryTool()]
 
 memory = ConversationBufferMemory(memory_key="memory", return_messages=True)
 
@@ -119,19 +134,26 @@ llm_with_tools = llm0.bind(
 )
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful assistant"),
+    ("system", "You are an AI assistant. Your name is THT. Your task is to help students with their daily tasks."),
+    ("system", "Current time: {time}, user's name: {user_name}"),
+    MessagesPlaceholder(variable_name='chat_history'),
     ("user", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad"),
 ])
 
 agent = {
     "input": lambda x: x["input"],
+    "chat_history": lambda x: x["chat_history"],
+    "time": lambda _: datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "user_name": lambda _: "Minh",
     "agent_scratchpad": lambda x: format_to_openai_functions(x['intermediate_steps'])
 } | prompt | llm_with_tools | OpenAIFunctionsAgentOutputParser()
 
+chat_history = []
+
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-knowledge_graph_agent = personal_storage
+knowledge_graph_agent = None
 
 def extract_yt_url(message: str):
     import re
@@ -164,8 +186,10 @@ def chat(message: str, knowledge_graph: bool):
                 "data": ""
             }
         else:
-            message += " (current time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")"
-            output = str(agent_executor.invoke({ 'input': message })["output"])
+            output = str(agent_executor.invoke({ 'input': message, 'chat_history': chat_history })["output"])
+            chat_history.append(HumanMessage(content=message))
+            chat_history.append(AIMessage(content=output))
+            
             return {
                 "msg": output,
                 "type": "ignore" if output.find("[ignore]") != -1 or output.find("I apologize") != -1 else "normal",

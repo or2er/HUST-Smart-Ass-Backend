@@ -2,7 +2,7 @@ import os
 from langchain.chains import GraphCypherQAChain
 from langchain.graphs import Neo4jGraph
 from langchain.prompts import PromptTemplate
-from core.model import llm, llm0
+from core.model import llm0
 
 CYPHER_GENERATION_TEMPLATE = """Task: Generate Cypher statement to modify and query a graph database.
 Instructions:
@@ -31,16 +31,27 @@ Schema:
 The question is:
 {question}"""
 
-graph = Neo4jGraph(
-    url=os.environ['NEO4J_URL'],
-    username=os.environ['NEO4J_USERNAME'], 
-    password=os.environ['NEO4J_PASSWORD']
-)
-
 CYPHER_GENERATION_PROMPT = PromptTemplate(
     input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
 )
 
-graph_chain = GraphCypherQAChain.from_llm(
-    llm0, graph=graph, verbose=True, cypher_prompt=CYPHER_GENERATION_PROMPT
-)
+
+graph: Neo4jGraph = None
+graph_chain: GraphCypherQAChain = None
+
+def connect_to_neo4j():
+    global graph, graph_chain
+
+    graph = Neo4jGraph(
+        url=os.environ['NEO4J_URL'],
+        username=os.environ['NEO4J_USERNAME'], 
+        password=os.environ['NEO4J_PASSWORD']
+    )
+
+    graph_chain = GraphCypherQAChain.from_llm(
+        llm0, graph=graph, verbose=True, cypher_prompt=CYPHER_GENERATION_PROMPT
+    )
+
+    print("Connected to Neo4j")
+
+connect_to_neo4j()

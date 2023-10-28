@@ -5,4 +5,4 @@ from functions.chat import chat
 
 while True:
     message = input("You: ")
-    print("THT:", chat(message, False))
+    print("THT:", chat(message, False)['msg'])

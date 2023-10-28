@@ -39,6 +39,7 @@ docu_list = []
 msg_cache: dict[str, list()] = {}
 task_cache = []
 note_cache = []
+pp_time = False
 
 try:
     os.mkdir("data")
@@ -311,7 +312,6 @@ def on_load_past_msg():
 
 @sio.on("post-msg")
 def on_msg_received(id: str, msg: str):
-    knowledge_graph = False
     logInfo(f"Received msg: {id}: {msg}")
     append_msg(id, 1, {
         "msg": msg,
@@ -319,7 +319,8 @@ def on_msg_received(id: str, msg: str):
         "data": ""
     })
     if id == "chat":
-        res = chat(msg, knowledge_graph)
+        global pp_time
+        res = chat(msg, pp_time)
         if res.get("type") == "ignore":
             return
     else:
@@ -344,6 +345,20 @@ def onConnect():
 @sio.on("disconnect")
 def onDisconnect():
     logInfo("disconnected")
+
+
+# ================[LMAO]================
+@app.get('/pp')
+def pp():
+    global pp_time
+    if pp_time:
+        pp_time = False
+        print("Switched to normal mode")
+        return "Switched to normal mode"
+    else:
+        pp_time = True
+        print("Switched to knowledge graph mode")
+        return "Switched to knowledge graph mode"
 
 if __name__ == '__main__':
     sio.run(app, host="0.0.0.0", port=8000, debug=True)

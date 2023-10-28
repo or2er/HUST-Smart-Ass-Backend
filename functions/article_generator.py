@@ -29,7 +29,7 @@ class ArticleGenerator:
 
     def __init__(self, topic):
         self.topic = topic
-        self.chain = LLMChain(llm=llm0, prompt=ARTICLE_GENERATOR_PROMPT)
+        self.chain = LLMChain(llm=llm4, prompt=ARTICLE_GENERATOR_PROMPT)
         file_hash = hashlib.blake2b()
         file_hash.update(bytes(topic, 'utf-8'))
         self.id = f"topic_{file_hash.hexdigest()[:32]}"
