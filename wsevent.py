@@ -16,3 +16,5 @@ def update_progress(id, val):
 def send_msg(id, sender, msg):
     logInfo(f"Sent response: {id}: {msg}")
     sio.emit("get-msg", (id, sender, msg))
+    from server import append_msg
+    append_msg(id, sender, msg)

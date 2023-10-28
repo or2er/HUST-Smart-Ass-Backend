@@ -299,9 +299,9 @@ def load_msg(id):
                 pass
 
 
-def append_msg(id, sender, msg):
-    global msg_cache
+def append_msg(id: str, sender, msg):
     load_msg(id)
+    global msg_cache
     msg_cache[id].append([sender, msg])
     with open(f"data/chat_{id}.pkl", 'ab') as fp:
         pickle.dump([sender, msg], fp)

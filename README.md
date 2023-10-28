@@ -8,7 +8,7 @@
 pip install -r requirements.txt
 ```
 
-### Setup `.env` file, `credentials.json` file
+### Setup `.env` file
 
 ### Run server
 ```
@@ -17,16 +17,6 @@ python server.py
 Default port is `8000`.
 
 ## API
-
-### Interact with chatbot
-
-- import method `chat` from `modules/chat.py`
-
-- Usage
-```
-output: str = chat("Hello") # long time to execute
-```
-
 - Run file `demo.py` to run a demo in terminal
 
 ### Documents
@@ -196,10 +186,11 @@ output: str = chat("Hello") # long time to execute
 ```
 <id>                # "chat": Chatbot related, <document_id>: Document related
 <sender>            # 0: AI | 1: User
+
 {                   # AI's response as an object
     "msg": <msg>,   # AI's response message
-    "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube)
-    "data" <data>   # Additional data ("normal": "", "yt": Document ID)
+    "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube, "topic": auto-function markdown)
+    "data" <data>   # Additional data ("normal": "", "yt"/"topic": Document ID)
 }                   
 ```
 
@@ -215,10 +206,10 @@ output: str = chat("Hello") # long time to execute
     "msg": <status>,        # "ok"
     "data": [
         [
-            <sender>        # 0: AI | 1: User
+            <sender>,       # 0: AI | 1: User
             {                   # AI's response as an object
                 "msg": <msg>,   # AI's response message
-                "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube)
+                "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube, "topic": auto-function markdown)
                 "data" <data>   # Additional data ("normal": "", "yt": Document ID)
             }    
         ],
