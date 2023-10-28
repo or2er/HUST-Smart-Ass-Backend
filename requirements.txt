@@ -6,7 +6,7 @@ Flask-SocketIO
 pypdf==3.16.1
 tiktoken~=0.5.1
 faiss-cpu
-youtube-transcript-api==0.6.1
+youtube-transcript-api
 langchain-experimental
 neo4j
 wikipedia
