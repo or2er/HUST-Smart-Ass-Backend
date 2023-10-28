@@ -9,6 +9,7 @@ class DocumentAbout:
         self.id = data.get("id") or ""
         self.type = data.get("type") or "query"
         self.name = data.get("name") or ""
+        self.processing_status = 0
 
 class DocumentModel:
     def print_debug(self, msg):
@@ -52,7 +53,7 @@ class DocumentModel:
             elif self.text == None or self.text == "":
                 self.status = "Where text??"
             else:
-                self.status = "Processing, please wait"
+                self.status = None
                 self.print_debug("Processing")
 
                 chunks = self.text_splitter.split_text(text=self.text)
@@ -60,6 +61,8 @@ class DocumentModel:
                 self.faiss_db = FAISS.from_texts(chunks, embeddings)
                 self.status = None
                 self.processing_status = 1
+                from wsevent import update_progress
+                update_progress(self.id, 1)
                 self.faiss_db.save_local(f"data/vs_{self.id}")
                 self.print_debug("Saved DB")
 

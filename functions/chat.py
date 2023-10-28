@@ -91,10 +91,18 @@ def chat(message: str):
         from server import create_docu_task
         from functions.yt_processing import yt_transcript
         create_docu_task(yt_transcript(extract_id))
-        return f"Activity found! I'm currently processing YouTube video id {extract_id}. Track progress and interact with this video in Auto-function tab."
+        return {
+            "msg": f"Activity found! I'm currently processing YouTube video id {extract_id}. Track progress and interact with this video in Auto-function tab.",
+            "type": "yt",
+            "data": f"yt_{extract_id}"
+        }
     try:
         message += " (current time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")"
-        return agent.run(message)
+        return {
+            "msg": agent.run(message),
+            "type": "normal",
+            "data": ""
+        }
     except Exception as e:
         response = str(e)
 

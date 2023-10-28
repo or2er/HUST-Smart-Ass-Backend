@@ -70,12 +70,29 @@ output: str = chat("Hello") # long time to execute
             "id": <id>,         # Document ID
             "name": <name>,     # Document name (title)
             "type": <type>      # Document type ("yt", "pdf")
+            "processing_status": <float> # Represented as a float in range [0,1].
         },
         {
             ...
         }
     ]
 }
+```
+
+
+### Progress tracking
+- Client event (Event name: `post-prog`)
+    + Request completion rate of a document.
+```
+<id>                # <document_id>: Document related
+```
+
+- Server event (Event name: `get-prog`)
+    + Respond with the completion rate of a document.
+    + This event will trigger when the rate changes, or when the client requested with `post-prog`.
+```
+<id>                # <document_id>: Document related
+<completion_rate>   # Represented as a float in range [0,1].
 ```
 
 ### Task/Note
@@ -167,7 +184,11 @@ output: str = chat("Hello") # long time to execute
 ```
 <id>                # "chat": Chatbot related, <document_id>: Document related
 <sender>            # 0: AI | 1: User
-<response_msg>      # AI's response
+{                   # AI's response as an object
+    "msg": <msg>,   # AI's response message
+    "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube)
+    "data" <data>   # Additional data ("normal": "", "yt": Document ID)
+}                   
 ```
 
 #### Load previous messages
@@ -183,7 +204,11 @@ output: str = chat("Hello") # long time to execute
     "data": [
         [
             <sender>        # 0: AI | 1: User
-            <message>       # Message content
+            {                   # AI's response as an object
+                "msg": <msg>,   # AI's response message
+                "type": <type>  # Type of response ("normal": normal chat, "yt": auto-function youtube)
+                "data" <data>   # Additional data ("normal": "", "yt": Document ID)
+            }    
         ],
         [
             ...
@@ -192,20 +217,6 @@ output: str = chat("Hello") # long time to execute
 }
 ```
 
-### Progress tracking
-- Client event (Event name: `post-prog`)
-    + Request completion rate of a document.
-```
-<id>                # <document_id>: Document related
-```
-
-- Server event (Event name: `get-prog`)
-    + Respond with the completion rate of a document.
-    + This event will trigger when the rate changes, or when the client requested with `post-prog`.
-```
-<id>                # <document_id>: Document related
-<completion_rate>   # Represented as a float in range [0,1].
-```
 ### Diet Recommendation
 #### Get recommendation
 - Request (form-data, POST `/recommend`)

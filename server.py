@@ -20,6 +20,8 @@ CORS(app)
 
 sio = SocketIO(app, cors_allowed_origins='*')
 
+import wsevent
+
 from time import sleep
 from threading import Thread
 from queue import Queue, Empty
@@ -63,6 +65,9 @@ def logInfo(msg):
 def index():
     return "Hi THT i'm alive so pls give me Điểm rèn luyện or else i'll not function as intended pls"
 
+
+
+# ================
 def load_doc_list():
     global docu_list
     if docu_list == []:
@@ -80,6 +85,9 @@ def load_doc_list():
 @app.post('/doc/read')
 def doc_list_read():
     load_doc_list()
+    for (i, docu) in enumerate(docu_list):
+        load_docu(docu.id)
+        docu_list[i].processing_status = docu_cache[docu.id].processing_status
     return {
         "msg": "ok",
         "data": json.loads(json.dumps(docu_list, default=vars))
@@ -88,18 +96,31 @@ def doc_list_read():
 def create_docu_task(data):
     global docu_cache
     docu_cache[data["id"]] = DocumentModel(data)
-
-    docu = DocumentAbout(data)
-    global docu_list
-    load_doc_list()
-    docu_list.append(docu)
-    with open(f"data/doc_list.pkl", 'ab') as fp:
-        pickle.dump(docu, fp)
     
     def execute():
         docu_cache[data["id"]].process()
 
     tasks.put(execute)
+
+    if docu_cache[data["id"]].status == None:
+        docu = DocumentAbout(data)
+        load_doc_list()
+        global docu_list
+        docu_list.append(docu)
+        with open(f"data/doc_list.pkl", 'ab') as fp:
+            pickle.dump(docu, fp)
+
+def load_docu(id):
+    global docu_cache
+    if docu_cache.get(id) == None:
+        docu_cache[id] = DocumentModel({"id": id, "type": "query"})
+        docu_cache[id].process()
+
+
+@sio.on("post-prog")
+def check_progress(task_id):
+    load_docu(task_id)
+    emit("get-prog", (task_id, docu_cache[task_id].processing_status))
 
 @app.post('/upload/<type>')
 def onUpload(type):
@@ -236,21 +257,6 @@ def get_recommend():
             "calories_calculator": calculator
         }
 
-
-# ================
-def load_docu(id):
-    global docu_cache
-    if docu_cache.get(id) == None:
-        docu_cache[id] = DocumentModel({"id": id, "type": "query"})
-        docu_cache[id].process()
-
-
-@sio.on("post-prog")
-def check_progress(task_id):
-    load_docu(task_id)
-    emit("get-prog", (task_id, docu_cache[task_id].processing_status))
-
-
 # ================
 def load_msg(id):
     global msg_cache
@@ -290,12 +296,20 @@ def on_load_past_msg():
 @sio.on("post-msg")
 def on_msg_received(id: str, msg: str):
     logInfo(f"Received msg: {id}: {msg}")
-    append_msg(id, 1, msg)
+    append_msg(id, 1, {
+        "msg": msg,
+        "type": "normal",
+        "data": ""
+    })
     if id == "chat":
         res = chat(msg)
     else:
         load_docu(id)
-        res = docu_cache[id].query(msg)
+        res = {
+            "msg": docu_cache[id].query(msg),
+            "type": "normal",
+            "data": ""
+        }
     append_msg(id, 0, res)
     logInfo(f"Sent response: {id}: {res}")
     emit("get-msg", (id, 0, res))
