@@ -9,11 +9,11 @@ embeddings = HuggingFaceHubEmbeddings()
 
 def create_llm(model, temperature):
     llm = ChatOpenAI(
-        streaming=True,
-        callbacks=[StreamingStdOutCallbackHandler()], 
+        # streaming=True,
+        # callbacks=[StreamingStdOutCallbackHandler()], 
         model=model,
-       temperature=temperature,
-         openai_api_key=os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        temperature=temperature,
+        openai_api_key=os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"),
         openai_api_base=os.environ.get("OPENAI_API_BASE") or os.getenv("OPENAI_API_BASE"),
         model_kwargs={
             "headers": { "HTTP-Referer": "https://github.com" },
