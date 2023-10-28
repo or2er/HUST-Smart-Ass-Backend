@@ -1,6 +1,8 @@
 import flask
 import re
 from youtube_transcript_api import YouTubeTranscriptApi
+import requests
+from bs4 import BeautifulSoup
 
 def yt_transcript(id: str):
     # extract transcript from video id
@@ -36,10 +38,17 @@ def yt_transcript(id: str):
     text = re.sub(r' \n+', '\n', text)
     text = re.sub(r'\n', ' ', text)
     
+    # title crawler
+    r = requests.get(f"https://www.youtube.com/watch?v={id}")
+    soup = BeautifulSoup(r.text)
+
+    link = soup.find_all(name="title")[0]
+    title = link.text
+
     return {
         "id": f"yt_{id}",
         "text": text,
-        "name": f"{id}", # Todo: crawl name
+        "name": f"{title}",
         "type": "yt"
     }
 

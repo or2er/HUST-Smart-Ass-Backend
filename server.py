@@ -85,13 +85,27 @@ def load_doc_list():
 @app.post('/doc/read')
 def doc_list_read():
     load_doc_list()
+    global docu_list
     for (i, docu) in enumerate(docu_list):
-        load_docu(docu.id)
-        docu_list[i].processing_status = docu_cache[docu.id].processing_status
+        if docu.type == "topic":
+            if os.path.exists(f"data/{docu.id}.pkl"):
+                docu_list[i].processing_status = 1
+            else:
+                docu_list[i].processing_status = 0
+        else:
+            load_docu(docu.id)
+            docu_list[i].processing_status = docu_cache[docu.id].processing_status
     return {
         "msg": "ok",
         "data": json.loads(json.dumps(docu_list, default=vars))
     }
+
+def append_docu_task(docu):
+    load_doc_list()
+    global docu_list
+    docu_list.append(docu)
+    with open(f"data/doc_list.pkl", 'ab') as fp:
+        pickle.dump(docu, fp)
 
 def create_docu_task(data):
     global docu_cache
@@ -103,12 +117,7 @@ def create_docu_task(data):
     tasks.put(execute)
 
     if docu_cache[data["id"]].status == None:
-        docu = DocumentAbout(data)
-        load_doc_list()
-        global docu_list
-        docu_list.append(docu)
-        with open(f"data/doc_list.pkl", 'ab') as fp:
-            pickle.dump(docu, fp)
+        append_docu_task(DocumentAbout(data))
 
 def load_docu(id):
     global docu_cache
@@ -295,6 +304,7 @@ def on_load_past_msg():
 
 @sio.on("post-msg")
 def on_msg_received(id: str, msg: str):
+    knowledge_graph = False
     logInfo(f"Received msg: {id}: {msg}")
     append_msg(id, 1, {
         "msg": msg,
@@ -302,7 +312,7 @@ def on_msg_received(id: str, msg: str):
         "data": ""
     })
     if id == "chat":
-        res = chat(msg)
+        res = chat(msg, knowledge_graph)
     else:
         load_docu(id)
         res = {
