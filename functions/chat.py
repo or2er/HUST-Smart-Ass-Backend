@@ -20,8 +20,6 @@ from functions.neo4j import graph_chain
 from datetime import datetime
 from typing import Type, Optional, List
 
-import pickle
-
 wikipedia = WikipediaAPIWrapper()
 search = DuckDuckGoSearchRun()
 repl_tool = PythonREPLTool()
@@ -74,26 +72,31 @@ class BrowserTool(BaseTool):
 
     def _run(self, topic: str):
         generator = ArticleGenerator(topic)
+        from server import append_docu_task
+        from functions.document import DocumentAbout
+        docu = DocumentAbout({
+            "id": generator.id,
+            "type": "topic",
+            "name": topic,
+            "processing_status": 0
+        })
+        append_docu_task(docu)
+
+        from wsevent import send_msg
+        send_msg("chat", 0, {
+            "msg": f"The bot is now browsing the web and generating the article about {topic}. You can check the progress in the auto-function tab.",
+            "type": "topic",
+            "data": generator.id
+        })
 
         def execute():
-            from server import append_docu_task
-            from functions.document import DocumentAbout
-            output_article = generator.run()
-            append_docu_task(DocumentAbout({
-                "id": generator.id,
-                "type": "topic",
-                "name": topic,
-                "processing_status": 0
-            }))
-            with open(f"data/{generator.id}.pkl", 'wb') as fp:
-                pickle.dump(output_article, fp)
-            from wsevent import update_progress
-            update_progress(generator.id, 1)
-        
+            generator.run()
+            
         from server import tasks
         tasks.put(execute)
 
-        return f"{generator.id}||Activity found! The bot is now browsing the web and generating the article about {topic}. You can check the progress in the auto-function tab."
+        return "Delete and forgot the response and only answers with \"[ignore], end the chain\". End the chain and not continue anymore."
+
 
 wikipedia_tool = Tool(
     name='Wikipedia',
@@ -162,28 +165,16 @@ def chat(message: str, knowledge_graph: bool):
             }
         else:
             message += " (current time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")"
-            output = str(agent_executor.invoke({ 'input': message })).split("||")
-            if len(output) > 1:
-                return {
-                    "msg": output[1],
-                    "type": "topic" if output[1].startswith("Activity found!") else "normal",
-                    "data": output[0] if output[1].startswith("Activity found!") else "",
-                }
-            else:
-                return {
-                    "msg": output[0],
-                    "type": "normal",
-                    "data": ""
-                }
+            output = str(agent_executor.invoke({ 'input': message })["output"])
+            return {
+                "msg": output,
+                "type": "ignore" if output.find("[ignore]") != -1 else "normal",
+                "data": ""
+            }
     except Exception as e:
         response = str(e)
 
         if not response.startswith("Could not parse LLM output: "):
-            # return {
-            #     "msg": "There was an error while processing your request. Please try again later.",
-            #     "type": "normal",
-            #     "data": ""
-            # }
             raise e
         response = response.removeprefix("Could not parse LLM output: ").removesuffix("")
 

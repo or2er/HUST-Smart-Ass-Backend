@@ -69,7 +69,7 @@ output: str = chat("Hello") # long time to execute
         {
             "id": <id>,         # Document ID
             "name": <name>,     # Document name (title)
-            "type": <type>      # Document type ("yt", "pdf")
+            "type": <type>      # Document type ("yt", "pdf", "topic")
             "processing_status": <float> # Represented as a float in range [0,1].
         },
         {
@@ -79,6 +79,18 @@ output: str = chat("Hello") # long time to execute
 }
 ```
 
+#### Read Markdown topic
+- Request (form-data, POST `/doc/md`)
+```
+    "id": <model_id>,       # Document Markdown ID
+```
+- Response (JSON)
+```
+{
+    "msg": <status>,            # "ok", "err"
+    "data": <markdown content>  # Markdown content
+}
+```
 
 ### Progress tracking
 - Client event (Event name: `post-prog`)

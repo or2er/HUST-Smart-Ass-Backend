@@ -88,7 +88,7 @@ def doc_list_read():
     global docu_list
     for (i, docu) in enumerate(docu_list):
         if docu.type == "topic":
-            if os.path.exists(f"data/{docu.id}.pkl"):
+            if os.path.exists(f"data/{docu.id}.md"):
                 docu_list[i].processing_status = 1
             else:
                 docu_list[i].processing_status = 0
@@ -99,6 +99,22 @@ def doc_list_read():
         "msg": "ok",
         "data": json.loads(json.dumps(docu_list, default=vars))
     }
+
+@app.post('/doc/md')
+def doc_md_read():
+    id = request.form.get("id")
+    if os.path.exists(f"data/{id}.md"):
+        with open(f"data/{id}.md", 'r', encoding="utf-8") as fr:
+            outp = fr.read()
+        return {
+            "msg": "ok",
+            "data": outp
+        }
+    else:
+        return {
+            "msg": "err",
+            "data": "no data"
+        }
 
 def append_docu_task(docu):
     load_doc_list()
@@ -313,6 +329,8 @@ def on_msg_received(id: str, msg: str):
     })
     if id == "chat":
         res = chat(msg, knowledge_graph)
+        if res.get("type") == "ignore":
+            return
     else:
         load_docu(id)
         res = {

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import pickle
 import requests
 import os
 import re
@@ -28,10 +29,11 @@ class ArticleGenerator:
 
     def __init__(self, topic):
         self.topic = topic
-        self.chain = LLMChain(llm=llm4, prompt=ARTICLE_GENERATOR_PROMPT)
+        self.chain = LLMChain(llm=llm0, prompt=ARTICLE_GENERATOR_PROMPT)
         file_hash = hashlib.blake2b()
         file_hash.update(bytes(topic, 'utf-8'))
-        self.id = f"topic_{file_hash.hexdigest()[:32]}",
+        self.id = f"topic_{file_hash.hexdigest()[:32]}"
+        self.article = ""
 
     def run(self):
         contents = self.crawl_data_from_websites()
@@ -47,15 +49,15 @@ class ArticleGenerator:
         for i, content in enumerate(contents):
             str_contents += f"Website {i}: {content}\n"
         
-        article = self.chain.predict(topic=self.topic, websites=str_contents)
+        self.article = self.chain.predict(topic=self.topic, websites=str_contents)
 
-        lines = article.split('\n')
+        lines = self.article.split('\n')
 
-        article = ""
+        self.article = ""
         current_header = None
         image_set = set()
         for i, line in enumerate(lines):
-            article += line + '\n'
+            self.article += line + '\n'
 
             # check if the line is heading
             if line.startswith('##'):
@@ -66,13 +68,18 @@ class ArticleGenerator:
 
                 for image in images:
                     if image not in image_set:
-                        article += f"![{current_header}]({image})\n"
+                        self.article += f"![{current_header}]({image})\n"
                         image_set.add(image)
                         break
 
                 current_header = None
+        
+        with open(f"data/{self.id}.md", 'w', encoding="utf-8") as fp:
+            print(self.article, file=fp)
+        from wsevent import update_progress
+        update_progress(self.id, 1)
 
-        return article
+        return self.article
 
     def crawl_data_from_websites(self):
         links = self.search(self.topic)
