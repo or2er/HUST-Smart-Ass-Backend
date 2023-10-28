@@ -56,9 +56,11 @@ def diet_recommendation():
                     activity='Moderate exercise (3-5 days/wk)',
                     meals_calories_perc=meals_calories_perc,
                     weight_loss=weight_loss)
+    
     output = person.generate_recommendations()
+    meals = {k: [ t['RecipeIngredientParts'] for t in v] for k, v in output.items() if k in ['breakfast', 'lunch', 'dinner']}
 
-    return output
+    return meals
 
 class BrowserInput(BaseModel):
     topic: str = Field(description="The name of the topic to summarize")
