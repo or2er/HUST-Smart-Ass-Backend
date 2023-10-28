@@ -13,7 +13,6 @@ from flask_socketio import SocketIO, emit
 from pydantic import BaseModel, conlist
 from typing import List, Optional
 import pandas as pd
-from core.recommend_model import recommend, output_recommended_recipes
 from functions.recommendation import Person
 
 app = Flask(__name__)
@@ -27,13 +26,14 @@ from queue import Queue, Empty
 from functions.pdf_processing import pdfUpload
 from functions.yt_processing import ytUpload
 
-from functions.document import DocumentModel
+from functions.document import DocumentAbout, DocumentModel
 from functions.task import Task
 from functions.note import Note
 from functions.chat import chat
 
 tasks = Queue()
 docu_cache: dict[str, DocumentModel] = {}
+docu_list = []
 msg_cache: dict[str, list()] = {}
 task_cache = []
 note_cache = []
@@ -42,7 +42,6 @@ try:
     os.mkdir("data")
 except FileExistsError:
     pass
-
 
 def loop():
     while True:
@@ -55,18 +54,52 @@ def loop():
 
         sleep(1)
 
-
 Thread(target=loop, daemon=True).start()
-
 
 def logInfo(msg):
     print(f"[sid={request.sid}]: {msg}.")
-
 
 @app.route('/')
 def index():
     return "Hi THT i'm alive so pls give me Điểm rèn luyện or else i'll not function as intended pls"
 
+def load_doc_list():
+    global docu_list
+    if docu_list == []:
+        if os.path.exists(f"data/doc_list.pkl"):
+            with open(f"data/doc_list.pkl", 'rb') as fr:
+                try:
+                    while True:
+                        docu_list.append(pickle.load(fr))
+                except EOFError:
+                    pass
+        else:
+            with open(f"data/doc_list.pkl", 'wb') as fp:
+                pass
+
+@app.post('/doc/read')
+def doc_list_read():
+    load_doc_list()
+    return {
+        "msg": "ok",
+        "data": json.loads(json.dumps(docu_list, default=vars))
+    }
+
+def create_docu_task(data):
+    global docu_cache
+    docu_cache[data["id"]] = DocumentModel(data)
+
+    docu = DocumentAbout(data)
+    global docu_list
+    load_doc_list()
+    docu_list.append(docu)
+    with open(f"data/doc_list.pkl", 'ab') as fp:
+        pickle.dump(docu, fp)
+    
+    def execute():
+        docu_cache[data["id"]].process()
+
+    tasks.put(execute)
 
 @app.post('/upload/<type>')
 def onUpload(type):
@@ -77,13 +110,8 @@ def onUpload(type):
     if data == None:
         return "An error occured"
 
-    global docu_cache
-    docu_cache[data["id"]] = DocumentModel(data)
-
-    def execute():
-        docu_cache[data["id"]].process()
-
-    tasks.put(execute)
+    create_docu_task(data)
+    
     return {
         "id": data["id"],
         "text": data["text"]
@@ -102,9 +130,8 @@ def load_task():
                 except EOFError:
                     pass
         else:
-            # dirty hax
             with open(f"data/task.pkl", 'wb') as fp:
-                pickle.dump(Task(), fp)
+                pass
 
 
 @app.post('/task/create')
@@ -141,9 +168,8 @@ def load_note():
                 except EOFError:
                     pass
         else:
-            # dirty hax
             with open(f"data/note.pkl", 'wb') as fp:
-                pickle.dump(Note(), fp)
+                pass
 
 
 @app.post('/note/create')
@@ -238,9 +264,8 @@ def load_msg(id):
                 except EOFError:
                     pass
         else:
-            # dirty hax
             with open(f"data/chat_{id}.pkl", 'wb') as fp:
-                pickle.dump([0, "init"], fp)
+                pass
 
 
 def append_msg(id, sender, msg):

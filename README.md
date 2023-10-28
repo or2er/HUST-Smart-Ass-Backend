@@ -56,6 +56,28 @@ output: str = chat("Hello") # long time to execute
 }
 ```
 
+#### Read model list
+- Request (form-data, POST `/doc/read`)
+```
+    <empty>
+```
+- Response (JSON)
+```
+{
+    "msg": <status>,            # "ok"
+    "data": [
+        {
+            "id": <id>,         # Document ID
+            "name": <name>,     # Document name (title)
+            "type": <type>      # Document type ("yt", "pdf")
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
 ### Task/Note
 #### Create Task
 - Request (form-data, POST `/task/create`)

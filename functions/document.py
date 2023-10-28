@@ -2,8 +2,13 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from core.model import tiktoken_len, embeddings, llm0
+from core.model import tiktoken_len, embeddings, llm0, llm
 
+class DocumentAbout:
+    def __init__(self, data = {}):
+        self.id = data.get("id") or ""
+        self.type = data.get("type") or "query"
+        self.name = data.get("name") or ""
 
 class DocumentModel:
     def print_debug(self, msg):
@@ -13,12 +18,14 @@ class DocumentModel:
         self.id = data.get("id")
         self.text = data.get("text") or ""
         self.type = data.get("type") or "query"
+        self.name = data.get("name") or ""
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
             length_function=tiktoken_len
         )
-        self.chain = load_qa_chain(llm=llm0, chain_type="stuff")
+        moderu = llm if self.type == "yt" else llm0
+        self.chain = load_qa_chain(llm=moderu, chain_type="stuff")
         self.status = None
         self.processing_status = 0
         self.print_debug("New model created")

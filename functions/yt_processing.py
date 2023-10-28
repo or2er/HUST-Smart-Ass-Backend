@@ -2,13 +2,7 @@ import flask
 import re
 from youtube_transcript_api import YouTubeTranscriptApi
 
-def ytUpload(request: flask.Request):
-    id = request.form["id"]
-
-    # check if invalid request
-    if id == None:
-        return None
-
+def yt_transcript(id: str):
     # extract transcript from video id
     transcript_list = YouTubeTranscriptApi.list_transcripts(id)
     try:
@@ -41,10 +35,20 @@ def ytUpload(request: flask.Request):
     text = re.sub(' +', ' ', text)
     text = re.sub(r' \n+', '\n', text)
     text = re.sub(r'\n', ' ', text)
-
+    
     return {
         "id": f"yt_{id}",
         "text": text,
+        "name": f"{id}", # Todo: crawl name
         "type": "yt"
     }
+
+def ytUpload(request: flask.Request):
+    id = request.form["id"]
+
+    # check if invalid request
+    if id == None:
+        return None
+
+    return yt_transcript(id)
 

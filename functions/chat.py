@@ -13,7 +13,6 @@ from functions.neo4j import graph_chain
 from datetime import datetime
 from typing import Type, Optional, List
 
-
 wikipedia = WikipediaAPIWrapper()
 search = DuckDuckGoSearchRun()
 repl_tool = PythonREPLTool()
@@ -75,7 +74,24 @@ agent = initialize_agent(
     }
 )
 
+def extract_yt_url(message: str):
+    import re
+    try:
+        fir = re.search("(?P<url>youtu?[^\s]+)", message).group("url")
+        if fir.find("/watch?v=") != -1:
+            return fir.split("/watch?v=")[1].split("&")[0]
+        else:
+            return fir.split(".be/")[1].split("&")[0]
+    except Exception as e:
+        return None
+
 def chat(message: str):
+    extract_id = extract_yt_url(message)
+    if extract_id != None:
+        from server import create_docu_task
+        from functions.yt_processing import yt_transcript
+        create_docu_task(yt_transcript(extract_id))
+        return f"Activity found! I'm currently processing YouTube video id {extract_id}. Track progress and interact with this video in Auto-function tab."
     try:
         message += " (current time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")"
         return agent.run(message)
