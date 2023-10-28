@@ -1,19 +1,19 @@
 import os
+import tiktoken
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import HuggingFaceHubEmbeddings
-
-import tiktoken
-from dotenv import load_dotenv
-load_dotenv()
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 tokenize = tiktoken.get_encoding('cl100k_base')
 embeddings = HuggingFaceHubEmbeddings()
 
 def create_llm(model, temperature):
     llm = ChatOpenAI(
-        temperature=temperature,
+        streaming=True,
+        callbacks=[StreamingStdOutCallbackHandler()], 
         model=model,
-        openai_api_key=os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"),
+       temperature=temperature,
+         openai_api_key=os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"),
         openai_api_base=os.environ.get("OPENAI_API_BASE") or os.getenv("OPENAI_API_BASE"),
         model_kwargs={
             "headers": { "HTTP-Referer": "https://github.com" },
