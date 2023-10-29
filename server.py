@@ -70,6 +70,7 @@ def index():
 # ================
 def load_doc_list():
     global docu_list
+    docu_list = []
     if os.path.exists(f"data/doc_list.pkl"):
         with open(f"data/doc_list.pkl", 'rb') as fr:
             try:
@@ -117,8 +118,6 @@ def doc_md_read():
 
 def append_docu_task(docu):
     load_doc_list()
-    global docu_list
-    docu_list.append(docu)
     with open(f"data/doc_list.pkl", 'ab') as fp:
         pickle.dump(docu, fp)
 
@@ -166,6 +165,7 @@ def onUpload(type):
 # ================
 def load_task():
     global task_cache
+    task_cache = []
     if os.path.exists(f"data/task.pkl"):
         with open(f"data/task.pkl", 'rb') as fr:
             try:
@@ -181,9 +181,7 @@ def load_task():
 @app.post('/task/create')
 def task_create():
     task = Task(request.form)
-    global task_cache
     load_task()
-    task_cache.append(task)
     with open(f"data/task.pkl", 'ab') as fp:
         pickle.dump(task, fp)
     return {
@@ -203,6 +201,7 @@ def task_read():
 # ================
 def load_note():
     global note_cache
+    note_cache = []
     if os.path.exists(f"data/note.pkl"):
         with open(f"data/note.pkl", 'rb') as fr:
             try:
@@ -218,10 +217,7 @@ def load_note():
 @app.post('/note/create')
 def note_create():
     note = Note(request.form)
-    global note_cache
     load_note()
-    note_cache.append(note)
-    print(note.details)
     with open(f"data/note.pkl", 'ab') as fp:
         pickle.dump(note, fp)
     return {
@@ -297,8 +293,6 @@ def load_msg(id):
 
 def append_msg(id: str, sender, msg):
     load_msg(id)
-    global msg_cache
-    msg_cache[id].append([sender, msg])
     with open(f"data/chat_{id}.pkl", 'ab') as fp:
         pickle.dump([sender, msg], fp)
 
