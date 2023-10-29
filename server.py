@@ -70,17 +70,16 @@ def index():
 # ================
 def load_doc_list():
     global docu_list
-    if docu_list == []:
-        if os.path.exists(f"data/doc_list.pkl"):
-            with open(f"data/doc_list.pkl", 'rb') as fr:
-                try:
-                    while True:
-                        docu_list.append(pickle.load(fr))
-                except EOFError:
-                    pass
-        else:
-            with open(f"data/doc_list.pkl", 'wb') as fp:
+    if os.path.exists(f"data/doc_list.pkl"):
+        with open(f"data/doc_list.pkl", 'rb') as fr:
+            try:
+                while True:
+                    docu_list.append(pickle.load(fr))
+            except EOFError:
                 pass
+    else:
+        with open(f"data/doc_list.pkl", 'wb') as fp:
+            pass
 
 @app.post('/doc/read')
 def doc_list_read():
@@ -167,17 +166,16 @@ def onUpload(type):
 # ================
 def load_task():
     global task_cache
-    if task_cache == []:
-        if os.path.exists(f"data/task.pkl"):
-            with open(f"data/task.pkl", 'rb') as fr:
-                try:
-                    while True:
-                        task_cache.append(pickle.load(fr))
-                except EOFError:
-                    pass
-        else:
-            with open(f"data/task.pkl", 'wb') as fp:
+    if os.path.exists(f"data/task.pkl"):
+        with open(f"data/task.pkl", 'rb') as fr:
+            try:
+                while True:
+                    task_cache.append(pickle.load(fr))
+            except EOFError:
                 pass
+    else:
+        with open(f"data/task.pkl", 'wb') as fp:
+            pass
 
 
 @app.post('/task/create')
@@ -205,17 +203,16 @@ def task_read():
 # ================
 def load_note():
     global note_cache
-    if note_cache == []:
-        if os.path.exists(f"data/note.pkl"):
-            with open(f"data/note.pkl", 'rb') as fr:
-                try:
-                    while True:
-                        note_cache.append(pickle.load(fr))
-                except EOFError:
-                    pass
-        else:
-            with open(f"data/note.pkl", 'wb') as fp:
+    if os.path.exists(f"data/note.pkl"):
+        with open(f"data/note.pkl", 'rb') as fr:
+            try:
+                while True:
+                    note_cache.append(pickle.load(fr))
+            except EOFError:
                 pass
+    else:
+        with open(f"data/note.pkl", 'wb') as fp:
+            pass
 
 
 @app.post('/note/create')
@@ -285,18 +282,17 @@ def get_recommend():
 # ================
 def load_msg(id):
     global msg_cache
-    if msg_cache.get(id) == None:
-        msg_cache[id] = []
-        if os.path.exists(f"data/chat_{id}.pkl"):
-            with open(f"data/chat_{id}.pkl", 'rb') as fr:
-                try:
-                    while True:
-                        msg_cache[id].append(pickle.load(fr))
-                except EOFError:
-                    pass
-        else:
-            with open(f"data/chat_{id}.pkl", 'wb') as fp:
+    msg_cache[id] = []
+    if os.path.exists(f"data/chat_{id}.pkl"):
+        with open(f"data/chat_{id}.pkl", 'rb') as fr:
+            try:
+                while True:
+                    msg_cache[id].append(pickle.load(fr))
+            except EOFError:
                 pass
+    else:
+        with open(f"data/chat_{id}.pkl", 'wb') as fp:
+            pass
 
 
 def append_msg(id: str, sender, msg):
@@ -312,6 +308,7 @@ def on_load_past_msg():
     req = request.form
     id = req.get("id")
     load_msg(id)
+    global msg_cache
     return {
         "msg": "ok",
         "data": json.loads(json.dumps(msg_cache[id][-int(req.get("num")):], default=vars))

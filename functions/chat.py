@@ -168,7 +168,7 @@ def chat(message: str, knowledge_graph: bool):
             output = str(agent_executor.invoke({ 'input': message })["output"])
             return {
                 "msg": output,
-                "type": "ignore" if output.find("[ignore]") != -1 else "normal",
+                "type": "ignore" if output.find("[ignore]") != -1 or output.find("I apologize") != -1 else "normal",
                 "data": ""
             }
     except Exception as e:
